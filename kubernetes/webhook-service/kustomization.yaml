@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - configmap.yaml
+  - deployment.yaml
+  - service.yaml
+
+# Common labels for all resources
+commonLabels:
+  app: webhook-service
+  component: webhook-router
+  managed-by: kustomize
+
+# Default namespace
+namespace: claude-webhook
+
+# Default image - can be overridden
+images:
+  - name: claude-webhook-service
+    newTag: latest
+
+# Configuration patches that can be used by overlays
+patchesStrategicMerge: []
+
+# Json patches that can be used by overlays  
+patchesJson6902: []

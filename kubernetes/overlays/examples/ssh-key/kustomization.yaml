@@ -1,0 +1,52 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference to base configuration
+resources:
+  - ../../../base
+
+# Override namespace for this project
+namespace: claude-dev-myproject-ssh
+
+# Override labels to include project-specific info
+commonLabels:
+  app: claude-dev-env
+  project: myproject-ssh
+  git-provider: github
+  auth-method: ssh-key
+  managed-by: kustomize
+
+# Generate ConfigMap with project-specific settings
+configMapGenerator:
+  - name: claude-dev-config
+    behavior: replace
+    literals:
+      - git-repo=git@github.com:myorg/myproject.git
+      - jira-base-url=https://myorg.atlassian.net
+      - jira-email=dev@myorg.com
+
+# Generate Secret with SSH key authentication
+secretGenerator:
+  - name: claude-dev-secrets
+    behavior: replace
+    literals:
+      - anthropic-api-key=your-anthropic-api-key
+      - code-server-password=your-secure-password
+      - sudo-password=your-sudo-password
+      - jira-api-key=your-jira-api-key
+  - name: claude-dev-ssh-key
+    files:
+      - ssh-privatekey=ssh-private-key
+      - ssh-publickey=ssh-public-key
+
+# Patches to customize deployment for SSH key auth
+patchesStrategicMerge:
+  - project-patches.yaml
+
+# Name prefix for all resources
+namePrefix: myproject-ssh-
+
+# Override image tag if needed
+images:
+  - name: claude-dev-env
+    newTag: latest

@@ -1,0 +1,13 @@
+# PLACEHOLDER: Replace with your actual SSH private key
+# Example format:
+# -----BEGIN OPENSSH PRIVATE KEY-----
+# your-private-key-content-here
+# -----END OPENSSH PRIVATE KEY-----
+#
+# To create an SSH key:
+# ssh-keygen -t ed25519 -C "your-email@example.com" -f ./ssh-private-key
+# 
+# Then add the public key to your Git provider:
+# - GitHub: Settings → SSH and GPG keys
+# - GitLab: Preferences → SSH Keys  
+# - Bitbucket: Personal settings → SSH keys

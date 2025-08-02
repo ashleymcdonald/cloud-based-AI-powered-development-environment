@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claude-dev-config
+  labels:
+    app: claude-dev-env
+data:
+  git-repo: "https://github.com/your-org/your-project.git"
+  jira-base-url: "https://your-org.atlassian.net"
+  jira-email: "your-email@company.com"

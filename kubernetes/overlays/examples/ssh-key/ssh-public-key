@@ -1,0 +1,5 @@
+# PLACEHOLDER: Replace with your actual SSH public key
+# Example format:
+# ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGvMwMj... your-email@example.com
+#
+# This should be the corresponding public key for the private key above

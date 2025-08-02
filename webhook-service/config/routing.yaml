@@ -1,0 +1,42 @@
+# Webhook routing configuration
+# Routes JIRA webhooks to specific Claude Code project instances
+
+# Project-specific routes
+routes:
+  - name: "myproject"
+    namespace: "claude-dev-myproject"
+    agentapi_url: "http://myproject-claude-dev-env-service.claude-dev-myproject.svc.cluster.local:3284"
+    jira_projects:
+      - "MYPROJ"
+      - "PROJ-*"  # Matches PROJ-123, PROJ-456, etc.
+    enabled: true
+
+  - name: "frontend-app"
+    namespace: "claude-dev-frontend"
+    agentapi_url: "http://frontend-claude-dev-env-service.claude-dev-frontend.svc.cluster.local:3284"
+    jira_projects:
+      - "FRONT"
+      - "UI"
+    enabled: true
+
+  - name: "backend-api"
+    namespace: "claude-dev-backend"
+    agentapi_url: "http://backend-claude-dev-env-service.claude-dev-backend.svc.cluster.local:3284"
+    jira_projects:
+      - "BACK"
+      - "API"
+    enabled: true
+
+# Catch-all route for unmatched projects
+catch_all:
+  name: "default-project"
+  namespace: "claude-dev"
+  agentapi_url: "http://claude-dev-env-service.claude-dev.svc.cluster.local:3284"
+  enabled: true
+
+# Configuration notes:
+# - Routes are matched in order, first match wins
+# - jira_projects supports wildcards: "*" matches all, "PROJ-*" matches PROJ-123, etc.
+# - catch_all is used when no specific route matches
+# - agentapi_url should point to the AgentAPI service of the target Claude Code instance
+# - Use Kubernetes service DNS names for internal cluster communication

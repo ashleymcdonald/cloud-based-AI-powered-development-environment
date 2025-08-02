@@ -1,0 +1,45 @@
+# Deployment patches for Bitbucket app password authentication
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claude-dev-env
+spec:
+  template:
+    spec:
+      containers:
+      - name: claude-dev-env
+        env:
+        # Override default git configuration for Bitbucket
+        - name: GIT_PROVIDER
+          value: "bitbucket"
+        - name: GIT_AUTH_METHOD
+          value: "app-password"
+        # Add project-specific environment variables
+        - name: PROJECT_NAME
+          value: "myproject-bitbucket"
+        - name: WORKSPACE_PATH
+          value: "/workspace/myproject"
+
+---
+# Service patches for project-specific ports
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-dev-env-nodeport
+spec:
+  ports:
+  - port: 8443
+    targetPort: 8443
+    nodePort: 35443  # Different NodePort for this project
+    protocol: TCP
+    name: code-server
+  - port: 3284
+    targetPort: 3284
+    nodePort: 35284  # Different NodePort for this project
+    protocol: TCP
+    name: agentapi
+  - port: 3000
+    targetPort: 3000
+    nodePort: 35000  # Different NodePort for this project
+    protocol: TCP
+    name: dev-server

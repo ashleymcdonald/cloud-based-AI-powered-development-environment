@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claude-dev-env
+  labels:
+    app: claude-dev-env
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: claude-dev-env
+  template:
+    metadata:
+      labels:
+        app: claude-dev-env
+    spec:
+      containers:
+      - name: claude-dev-env
+        image: claude-dev-env:latest
+        ports:
+        - containerPort: 8443
+          name: code-server
+        - containerPort: 3284
+          name: agentapi
+        - containerPort: 3000
+          name: dev-server
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "UTC"
+        - name: DEFAULT_WORKSPACE
+          value: "/workspace"
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-dev-secrets
+              key: code-server-password
+        - name: SUDO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: claude-dev-secrets
+              key: sudo-password
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-dev-secrets
+              key: anthropic-api-key
+        - name: GIT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: claude-dev-secrets
+              key: git-token
+              optional: true
+        - name: JIRA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-dev-secrets
+              key: jira-api-key
+              optional: true
+        - name: GIT_REPO
+          valueFrom:
+            configMapKeyRef:
+              name: claude-dev-config
+              key: git-repo
+              optional: true
+        - name: JIRA_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: claude-dev-config
+              key: jira-base-url
+              optional: true
+        - name: JIRA_EMAIL
+          valueFrom:
+            configMapKeyRef:
+              name: claude-dev-config
+              key: jira-email
+              optional: true
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        - name: config
+          mountPath: /config
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+      volumes:
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: claude-dev-workspace
+      - name: config
+        persistentVolumeClaim:
+          claimName: claude-dev-config

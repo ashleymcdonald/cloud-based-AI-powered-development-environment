@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  dev-environment:
+    build: ../image
+    container_name: claude-dev-env
+    ports:
+      - "8443:8443"      # code-server
+      - "3284:3284"      # AgentAPI
+      - "3000:3000"      # App dev server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - PASSWORD=your-secure-password
+      - SUDO_PASSWORD=sudo-password
+      - DEFAULT_WORKSPACE=/workspace
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GIT_REPO=${GIT_REPO}
+      - GIT_TOKEN=${GIT_TOKEN}
+      - JIRA_API_KEY=${JIRA_API_KEY}
+      - JIRA_BASE_URL=${JIRA_BASE_URL}
+      - JIRA_EMAIL=${JIRA_EMAIL}
+    volumes:
+      - ../workspace:/workspace
+      - ../config:/config
+    restart: unless-stopped

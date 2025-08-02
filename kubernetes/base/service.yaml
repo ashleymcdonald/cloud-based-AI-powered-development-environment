@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-dev-env-service
+  labels:
+    app: claude-dev-env
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 8443
+    targetPort: 8443
+    protocol: TCP
+    name: code-server
+  - port: 3284
+    targetPort: 3284
+    protocol: TCP
+    name: agentapi
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: dev-server
+  selector:
+    app: claude-dev-env
+
+---
+# Alternative NodePort service for environments without LoadBalancer support
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-dev-env-nodeport
+  labels:
+    app: claude-dev-env
+spec:
+  type: NodePort
+  ports:
+  - port: 8443
+    targetPort: 8443
+    nodePort: 30443
+    protocol: TCP
+    name: code-server
+  - port: 3284
+    targetPort: 3284
+    nodePort: 30284
+    protocol: TCP
+    name: agentapi
+  - port: 3000
+    targetPort: 3000
+    nodePort: 30000
+    protocol: TCP
+    name: dev-server
+  selector:
+    app: claude-dev-env

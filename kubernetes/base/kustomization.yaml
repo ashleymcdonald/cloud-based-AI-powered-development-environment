@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+
+# Common labels for all resources
+commonLabels:
+  app: claude-dev-env
+  managed-by: kustomize
+
+# Default namespace - can be overridden in overlays
+namespace: claude-dev
+
+# Default image - can be overridden in overlays
+images:
+  - name: claude-dev-env
+    newTag: latest
+
+# Configuration patches that can be used by overlays
+patchesStrategicMerge: []
+
+# Json patches that can be used by overlays
+patchesJson6902: []
+
+# ConfigMap and Secret generators (empty by default)
+configMapGenerator: []
+secretGenerator: []

@@ -1,0 +1,48 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference to base configuration
+resources:
+  - ../../../base
+
+# Override namespace for this project
+namespace: claude-dev-publicproject
+
+# Override labels to include project-specific info
+commonLabels:
+  app: claude-dev-env
+  project: publicproject
+  git-provider: github
+  auth-method: none
+  managed-by: kustomize
+
+# Generate ConfigMap with project-specific settings
+configMapGenerator:
+  - name: claude-dev-config
+    behavior: replace
+    literals:
+      - git-repo=https://github.com/openai/openai-python.git
+      - jira-base-url=https://myorg.atlassian.net
+      - jira-email=dev@myorg.com
+
+# Generate Secret without git token (public repo)
+secretGenerator:
+  - name: claude-dev-secrets
+    behavior: replace
+    literals:
+      - anthropic-api-key=your-anthropic-api-key
+      - code-server-password=your-secure-password
+      - sudo-password=your-sudo-password
+      - jira-api-key=your-jira-api-key
+
+# Patches to customize deployment for public repo
+patchesStrategicMerge:
+  - project-patches.yaml
+
+# Name prefix for all resources
+namePrefix: publicproject-
+
+# Override image tag if needed
+images:
+  - name: claude-dev-env
+    newTag: latest

@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-service
+  labels:
+    app: webhook-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 5000
+    protocol: TCP
+    name: http
+  selector:
+    app: webhook-service
+
+---
+# Alternative NodePort service for environments without LoadBalancer support
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-service-nodeport
+  labels:
+    app: webhook-service
+spec:
+  type: NodePort
+  ports:
+  - port: 5000
+    targetPort: 5000
+    nodePort: 30500
+    protocol: TCP
+    name: http
+  selector:
+    app: webhook-service
+
+---
+# ClusterIP service for internal communication
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-service-internal
+  labels:
+    app: webhook-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5000
+    targetPort: 5000
+    protocol: TCP
+    name: http
+  selector:
+    app: webhook-service
