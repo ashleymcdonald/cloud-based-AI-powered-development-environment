@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: claude-proxy
+  labels:
+    name: claude-proxy
+    purpose: reverse-proxy
+    managed-by: claude-manager

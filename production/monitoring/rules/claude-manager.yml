@@ -1,0 +1,114 @@
+groups:
+  - name: claude-manager.rules
+    rules:
+      # High-level service health
+      - record: claude_manager:up
+        expr: up{job="claude-manager"}
+
+      # Request rate by status code
+      - record: claude_manager:http_requests_rate
+        expr: rate(http_requests_total[5m])
+        labels:
+          service: "claude-manager"
+
+      # Error rate percentage
+      - record: claude_manager:error_rate
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100
+        labels:
+          service: "claude-manager"
+
+      # P95 response time
+      - record: claude_manager:response_time_p95
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+        labels:
+          service: "claude-manager"
+
+      # Project creation success rate
+      - record: claude_manager:project_creation_success_rate
+        expr: rate(project_operations_total{operation="create",status="success"}[5m]) / rate(project_operations_total{operation="create"}[5m]) * 100
+        labels:
+          service: "claude-manager"
+
+      # Active projects
+      - record: claude_manager:active_projects
+        expr: projects_total
+        labels:
+          service: "claude-manager"
+
+      # Webhook processing rate
+      - record: claude_manager:webhook_rate
+        expr: rate(webhook_requests_total[5m])
+        labels:
+          service: "claude-manager"
+
+  - name: claude-manager.alerts
+    rules:
+      # Service down alert
+      - alert: ClaudeManagerDown
+        expr: claude_manager:up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Claude Manager service is down"
+          description: "Claude Manager has been down for more than 1 minute."
+
+      # High error rate alert
+      - alert: ClaudeManagerHighErrorRate
+        expr: claude_manager:error_rate > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude Manager high error rate"
+          description: "Error rate is {{ $value }}% for the last 5 minutes."
+
+      # High response time alert
+      - alert: ClaudeManagerSlowResponse
+        expr: claude_manager:response_time_p95 > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude Manager slow response times"
+          description: "95th percentile response time is {{ $value }}s for the last 5 minutes."
+
+      # Project creation failures
+      - alert: ClaudeManagerProjectCreationFailures
+        expr: claude_manager:project_creation_success_rate < 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude Manager project creation failures"
+          description: "Project creation success rate is {{ $value }}% for the last 5 minutes."
+
+      # No active chat connections
+      - alert: ClaudeManagerNoActiveConnections
+        expr: active_chat_connections == 0
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "No active chat connections"
+          description: "No users are currently connected to chat interfaces."
+
+      # High memory usage
+      - alert: ClaudeManagerHighMemoryUsage
+        expr: (process_memory_rss_bytes / (1024*1024*1024)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude Manager high memory usage"
+          description: "Memory usage is {{ $value }}GB."
+
+      # Webhook processing failures
+      - alert: ClaudeManagerWebhookFailures
+        expr: rate(webhook_requests_total{status="error"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude Manager webhook processing failures"
+          description: "Webhook error rate is {{ $value }} requests/second."

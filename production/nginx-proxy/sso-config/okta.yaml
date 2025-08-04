@@ -1,0 +1,134 @@
+# Okta OIDC SSO Configuration
+
+listen:
+  addr: "0.0.0.0"
+  port: 8082
+
+login:
+  title: "Claude Code - Okta Authentication"
+  default_method: "oidc"
+  hide_mfa_field: true
+  names:
+    oidc: "Sign in with Okta"
+
+providers:
+  oidc:
+    issuer: "${OKTA_ISSUER}" # https://your-domain.okta.com/oauth2/default
+    client_id: "${OKTA_CLIENT_ID}"
+    client_secret: "${OKTA_CLIENT_SECRET}"
+    redirect_url: "${SSO_BASE_URL}/auth"
+    scopes:
+      - "openid"
+      - "profile"
+      - "email"
+      - "groups"
+
+cookie:
+  domain: "${SSO_COOKIE_DOMAIN:-}"
+  secure: ${SSO_COOKIE_SECURE:-true}
+  expire: ${SSO_COOKIE_EXPIRE:-86400}
+  prefix: "claude-auth"
+
+audit_log:
+  targets:
+    - fd://stdout
+  events: ["access_denied", "login_success", "login_failure", "logout", "validate"]
+  headers: ["x-origin-uri", "x-real-ip", "x-forwarded-for"]
+
+acl:
+  rule_sets:
+    - rules:
+        # Allow users with specific email domains
+        - field: "email"
+          regexp: "^[^@]+@${OKTA_ALLOWED_DOMAIN:-.*}$"
+        # Optional: Allow specific Okta groups
+        - field: "groups"
+          contains: ["${OKTA_ALLOWED_GROUPS:-everyone}"]
+      allow: ["oidc"]
+
+templates:
+  login: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Claude Code - Okta Authentication</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+                color: white;
+            }
+            .login-container {
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                width: 100%;
+                max-width: 400px;
+                text-align: center;
+            }
+            .logo {
+                font-size: 3em;
+                margin-bottom: 20px;
+            }
+            .title {
+                font-size: 1.5em;
+                margin-bottom: 30px;
+                font-weight: 300;
+            }
+            .okta-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                padding: 12px 20px;
+                background: #007dc1;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 500;
+                text-decoration: none;
+                transition: background 0.3s ease;
+            }
+            .okta-btn:hover {
+                background: #0073b1;
+            }
+            .okta-icon {
+                width: 20px;
+                height: 20px;
+                margin-right: 12px;
+                fill: currentColor;
+            }
+            .security-notice {
+                margin-top: 30px;
+                font-size: 12px;
+                opacity: 0.8;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="logo">🤖</div>
+            <div class="title">Claude Code</div>
+            <p>Access your AI-powered development environment</p>
+            <a href="/auth/oidc" class="okta-btn">
+                <svg class="okta-icon" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                    <circle cx="12" cy="12" r="4"/>
+                </svg>
+                Continue with Okta
+            </a>
+            <div class="security-notice">
+                🔒 Secure authentication powered by Okta
+            </div>
+        </div>
+    </body>
+    </html>

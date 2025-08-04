@@ -1,0 +1,41 @@
+# Docker ignore file for production image
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+.tmp
+tmp/
+temp/
+
+# Node modules (will be installed in container)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Cache directories
+.cache/
+.npm/
+.yarn/

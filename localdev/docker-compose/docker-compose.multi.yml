@@ -1,0 +1,117 @@
+version: '3.8'
+
+# Multi-project Docker Compose setup
+# Copy this file to your localdev root as docker-compose.yml
+# and customize the projects below
+
+services:
+  # Project 1 - Example Frontend Project
+  project-frontend:
+    image: claude-dev-env:latest
+    container_name: claude-frontend
+    ports:
+      - "8443:8443"  # VS Code Server
+      - "3284:3284"  # Claude Agent API
+      - "3000:3000"  # Dev Server
+    environment:
+      - GIT_REPOSITORY=https://github.com/your-org/frontend-repo.git
+      - GIT_AUTH_TYPE=token
+      - GIT_TOKEN=${FRONTEND_GIT_TOKEN}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PASSWORD=${FRONTEND_CODE_SERVER_PASSWORD}
+      - SUDO_PASSWORD=${FRONTEND_SUDO_PASSWORD}
+      - PROJECT_NAME=Frontend Project
+      - NODE_ENV=development
+    volumes:
+      - frontend-workspace:/workspace
+      - frontend-config:/config
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8443/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Project 2 - Example Backend Project
+  project-backend:
+    image: claude-dev-env:latest
+    container_name: claude-backend
+    ports:
+      - "8444:8443"  # VS Code Server
+      - "3285:3284"  # Claude Agent API
+      - "3001:3000"  # Dev Server
+    environment:
+      - GIT_REPOSITORY=https://github.com/your-org/backend-repo.git
+      - GIT_AUTH_TYPE=token
+      - GIT_TOKEN=${BACKEND_GIT_TOKEN}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PASSWORD=${BACKEND_CODE_SERVER_PASSWORD}
+      - SUDO_PASSWORD=${BACKEND_SUDO_PASSWORD}
+      - PROJECT_NAME=Backend Project
+      - NODE_ENV=development
+    volumes:
+      - backend-workspace:/workspace
+      - backend-config:/config
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8443/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Project 3 - Example Data Science Project
+  project-datascience:
+    image: claude-dev-env:latest
+    container_name: claude-datascience
+    ports:
+      - "8445:8443"  # VS Code Server
+      - "3286:3284"  # Claude Agent API
+      - "3002:3000"  # Dev Server
+      - "8888:8888"  # Jupyter Notebook
+    environment:
+      - GIT_REPOSITORY=https://github.com/your-org/data-science-repo.git
+      - GIT_AUTH_TYPE=ssh-key
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PASSWORD=${DATASCIENCE_CODE_SERVER_PASSWORD}
+      - SUDO_PASSWORD=${DATASCIENCE_SUDO_PASSWORD}
+      - PROJECT_NAME=Data Science Project
+      - NODE_ENV=development
+      - JUPYTER_ENABLE=true
+    volumes:
+      - datascience-workspace:/workspace
+      - datascience-config:/config
+      - ./projects/datascience/.ssh:/home/coder/.ssh:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8443/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  frontend-workspace:
+    driver: local
+  frontend-config:
+    driver: local
+  backend-workspace:
+    driver: local
+  backend-config:
+    driver: local
+  datascience-workspace:
+    driver: local
+  datascience-config:
+    driver: local
+
+# Usage:
+# 1. Copy this file to docker-compose.yml in localdev/
+# 2. Create a .env file with your configuration:
+#    cp .env.example .env
+# 3. Edit the services above for your projects
+# 4. Start all projects: docker-compose up -d
+# 5. Access projects:
+#    - Frontend: http://localhost:8443
+#    - Backend: http://localhost:8444  
+#    - Data Science: http://localhost:8445

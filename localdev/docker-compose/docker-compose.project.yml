@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  claude-dev:
+    image: claude-dev-env:latest
+    container_name: ${PROJECT_NAME:-claude-project}
+    ports:
+      - "${CODE_SERVER_PORT:-8443}:8443"
+      - "${AGENT_API_PORT:-3284}:3284"
+      - "${DEV_SERVER_PORT:-3000}:3000"
+    environment:
+      # Git configuration
+      - GIT_REPOSITORY=${GIT_REPOSITORY}
+      - GIT_AUTH_TYPE=${GIT_AUTH_TYPE:-none}
+      - GIT_TOKEN=${GIT_TOKEN:-}
+      
+      # Claude Code configuration
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PASSWORD=${CODE_SERVER_PASSWORD}
+      - SUDO_PASSWORD=${SUDO_PASSWORD}
+      - PROJECT_NAME=${PROJECT_NAME}
+      
+      # JIRA integration (optional)
+      - JIRA_BASE_URL=${JIRA_BASE_URL:-}
+      - JIRA_EMAIL=${JIRA_EMAIL:-}
+      - JIRA_API_KEY=${JIRA_API_KEY:-}
+      - JIRA_PROJECT_KEYS=${JIRA_PROJECT_KEYS:-}
+      
+      # Development settings
+      - NODE_ENV=development
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    
+    volumes:
+      # Workspace persistence
+      - workspace-data:/workspace
+      - config-data:/config
+      
+      # SSH keys (uncomment if using SSH authentication)
+      # - ./.ssh:/home/coder/.ssh:ro
+      
+      # Local development (uncomment to mount local code)
+      # - ./src:/workspace/src
+    
+    restart: unless-stopped
+    
+    # Security settings
+    security_opt:
+      - no-new-privileges:true
+    
+    # Resource limits (adjust as needed)
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8443/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  workspace-data:
+    driver: local
+  config-data:
+    driver: local

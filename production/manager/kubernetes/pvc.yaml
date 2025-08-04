@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: claude-manager-data
+  labels:
+    app: claude-manager
+    component: management-interface
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  # Uncomment and modify if you have a specific storage class
+  # storageClassName: your-storage-class
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: claude-manager-backup
+  namespace: claude-manager
+  labels:
+    app: claude-manager
+    component: backup-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  # Uncomment and modify if you have a specific storage class
+  # storageClassName: your-storage-class

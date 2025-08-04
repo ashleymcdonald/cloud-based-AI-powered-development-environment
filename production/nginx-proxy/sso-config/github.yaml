@@ -1,0 +1,127 @@
+# GitHub OAuth2 SSO Configuration
+
+listen:
+  addr: "0.0.0.0"
+  port: 8082
+
+login:
+  title: "Claude Code - GitHub Authentication"
+  default_method: "github"
+  hide_mfa_field: true
+  names:
+    github: "Sign in with GitHub"
+
+providers:
+  github:
+    client_id: "${GITHUB_CLIENT_ID}"
+    client_secret: "${GITHUB_CLIENT_SECRET}"
+    redirect_url: "${SSO_BASE_URL}/auth"
+    # Optional: Restrict to specific organizations
+    # organizations: ["your-org"]
+    # teams: ["your-org/developers", "your-org/admins"]
+
+cookie:
+  domain: "${SSO_COOKIE_DOMAIN:-}"
+  secure: ${SSO_COOKIE_SECURE:-true}
+  expire: ${SSO_COOKIE_EXPIRE:-86400}
+  prefix: "claude-auth"
+
+audit_log:
+  targets:
+    - fd://stdout
+  events: ["access_denied", "login_success", "login_failure", "logout", "validate"]
+  headers: ["x-origin-uri", "x-real-ip", "x-forwarded-for"]
+
+acl:
+  rule_sets:
+    - rules:
+        # Allow users from specific GitHub organizations
+        - field: "organization_login"
+          regexp: "^(${GITHUB_ALLOWED_ORGS:-.*})$"
+      allow: ["github"]
+
+templates:
+  login: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Claude Code - GitHub Authentication</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+                color: white;
+            }
+            .login-container {
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                width: 100%;
+                max-width: 400px;
+                text-align: center;
+            }
+            .logo {
+                font-size: 3em;
+                margin-bottom: 20px;
+            }
+            .title {
+                font-size: 1.5em;
+                margin-bottom: 30px;
+                font-weight: 300;
+            }
+            .github-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                padding: 12px 20px;
+                background: #333;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 500;
+                text-decoration: none;
+                transition: background 0.3s ease;
+            }
+            .github-btn:hover {
+                background: #24292e;
+            }
+            .github-icon {
+                width: 20px;
+                height: 20px;
+                margin-right: 12px;
+                fill: currentColor;
+            }
+            .security-notice {
+                margin-top: 30px;
+                font-size: 12px;
+                opacity: 0.8;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="logo">🤖</div>
+            <div class="title">Claude Code</div>
+            <p>Access your AI-powered development environment</p>
+            <a href="/auth/github" class="github-btn">
+                <svg class="github-icon" viewBox="0 0 24 24">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                Continue with GitHub
+            </a>
+            <div class="security-notice">
+                🔒 Secure authentication powered by GitHub OAuth 2.0
+            </div>
+        </div>
+    </body>
+    </html>

@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-manager-service
+  labels:
+    app: claude-manager
+    component: management-interface
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: claude-manager
+
+---
+# Optional: LoadBalancer service for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-manager-external
+  labels:
+    app: claude-manager
+    component: management-interface
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 3000
+    protocol: TCP
+    name: https
+  selector:
+    app: claude-manager
+
+---
+# Optional: NodePort service for direct access
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-manager-nodeport
+  labels:
+    app: claude-manager
+    component: management-interface
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    targetPort: 3000
+    nodePort: 30300
+    protocol: TCP
+    name: http
+  selector:
+    app: claude-manager

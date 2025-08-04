@@ -1,0 +1,176 @@
+# LDAP/Active Directory SSO Configuration
+
+listen:
+  addr: "0.0.0.0"
+  port: 8082
+
+login:
+  title: "Claude Code - LDAP Authentication"
+  default_method: "ldap"
+  hide_mfa_field: false
+  names:
+    ldap: "Corporate Login"
+
+providers:
+  ldap:
+    host: "${LDAP_HOST}"
+    port: ${LDAP_PORT:-389}
+    use_tls: ${LDAP_USE_TLS:-false}
+    start_tls: ${LDAP_START_TLS:-false}
+    skip_cert_validation: ${LDAP_SKIP_CERT_VALIDATION:-false}
+    base_dn: "${LDAP_BASE_DN}"
+    uid_attribute: "${LDAP_UID_ATTRIBUTE:-uid}"
+    # For Active Directory, typically use: sAMAccountName
+    # uid_attribute: "sAMAccountName"
+    
+    # LDAP search configuration
+    search_filter: "${LDAP_SEARCH_FILTER:-(uid=%s)}"
+    # For Active Directory: "(&(objectClass=person)(sAMAccountName=%s))"
+    
+    # Optional: Bind DN for LDAP search (if anonymous search not allowed)
+    bind_dn: "${LDAP_BIND_DN:-}"
+    bind_password: "${LDAP_BIND_PASSWORD:-}"
+    
+    # Attribute mapping
+    attribute_mapping:
+      username: "${LDAP_ATTR_USERNAME:-uid}"
+      name: "${LDAP_ATTR_NAME:-cn}"
+      mail: "${LDAP_ATTR_EMAIL:-mail}"
+      groups: "${LDAP_ATTR_GROUPS:-memberOf}"
+
+cookie:
+  domain: "${SSO_COOKIE_DOMAIN:-}"
+  secure: ${SSO_COOKIE_SECURE:-true}
+  expire: ${SSO_COOKIE_EXPIRE:-86400}
+  prefix: "claude-auth"
+
+audit_log:
+  targets:
+    - fd://stdout
+  events: ["access_denied", "login_success", "login_failure", "logout", "validate"]
+  headers: ["x-origin-uri", "x-real-ip", "x-forwarded-for"]
+
+acl:
+  rule_sets:
+    - rules:
+        # Allow users from specific LDAP groups
+        - field: "groups"
+          regexp: "${LDAP_ALLOWED_GROUPS:-.*}"
+        # Allow specific users
+        - field: "username"
+          regexp: "${LDAP_ALLOWED_USERS:-.*}"
+      allow: ["ldap"]
+
+templates:
+  login: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Claude Code - Corporate Login</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+                color: white;
+            }
+            .login-container {
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                width: 100%;
+                max-width: 400px;
+            }
+            .logo {
+                text-align: center;
+                font-size: 3em;
+                margin-bottom: 20px;
+            }
+            .title {
+                text-align: center;
+                font-size: 1.5em;
+                margin-bottom: 30px;
+                font-weight: 300;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+            }
+            input[type="text"], input[type="password"] {
+                width: 100%;
+                padding: 12px;
+                border: none;
+                border-radius: 8px;
+                background: rgba(255,255,255,0.2);
+                color: white;
+                font-size: 16px;
+                box-sizing: border-box;
+            }
+            input[type="text"]::placeholder, input[type="password"]::placeholder {
+                color: rgba(255,255,255,0.7);
+            }
+            .login-btn {
+                width: 100%;
+                padding: 12px;
+                background: #4ecdc4;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background 0.3s ease;
+            }
+            .login-btn:hover {
+                background: #45b7b8;
+            }
+            .security-notice {
+                margin-top: 30px;
+                font-size: 12px;
+                opacity: 0.8;
+                text-align: center;
+            }
+            .error {
+                background: rgba(255, 107, 107, 0.2);
+                border: 1px solid rgba(255, 107, 107, 0.5);
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="logo">🏢</div>
+            <div class="title">Claude Code</div>
+            {{if .Error}}
+            <div class="error">{{.Error}}</div>
+            {{end}}
+            <form method="post">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="login-btn">🔐 Sign In</button>
+            </form>
+            <div class="security-notice">
+                🔒 Secure authentication via LDAP/Active Directory
+            </div>
+        </div>
+    </body>
+    </html>

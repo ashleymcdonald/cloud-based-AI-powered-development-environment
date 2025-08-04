@@ -1,0 +1,58 @@
+{
+  "name": "claude-code-manager",
+  "version": "1.0.0",
+  "description": "Management interface for Claude Code development environments",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "watch": "tsc -w",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest"
+  },
+  "keywords": ["claude-code", "management", "kubernetes", "jira"],
+  "author": "Claude Code Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "axios": "^1.6.0",
+    "yaml": "^2.3.4",
+    "socket.io": "^4.7.4",
+    "multer": "^1.4.5-lts.1",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "uuid": "^9.0.1",
+    "@kubernetes/client-node": "^0.20.0",
+    "prom-client": "^15.1.0",
+    "express-prometheus-middleware": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/express": "^4.17.20",
+    "@types/cors": "^2.8.15",
+    "@types/morgan": "^1.9.7",
+    "@types/multer": "^1.4.8",
+    "@types/jsonwebtoken": "^9.0.4",
+    "@types/bcryptjs": "^2.4.5",
+    "@types/uuid": "^9.0.6",
+    "typescript": "^5.2.2",
+    "ts-node-dev": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
+    "@typescript-eslint/parser": "^6.8.0",
+    "eslint": "^8.51.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.6"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

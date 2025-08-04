@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claude-manager-config
+  labels:
+    app: claude-manager
+    component: management-interface
+data:
+  # JIRA configuration
+  jira-base-url: "https://your-org.atlassian.net"
+  jira-email: "automation@your-org.com"
+  
+  # Git configuration
+  default-git-org: "your-org"
+  
+  # Project configuration
+  projects-domain: "projects.internal"
+  
+  # Auto-creation settings
+  auto-create-enabled: "true"
+  
+  # Rate limiting
+  api-rate-limit: "100"
+  project-rate-limit: "10"
+  
+  # Logging
+  log-level: "info"
+  
+  # Resource defaults
+  default-memory-request: "1Gi"
+  default-memory-limit: "4Gi"
+  default-cpu-request: "500m"
+  default-cpu-limit: "2"
+  
+  # Storage defaults
+  default-workspace-size: "20Gi"
+  default-config-size: "5Gi"
+  
+  # Backup configuration
+  backup-interval-hours: "24"
+  backup-git-branch: "main"
+  
+  # Kubernetes integration
+  kubernetes-namespace: "claude-manager"

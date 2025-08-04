@@ -1,0 +1,164 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claude-manager
+  labels:
+    app: claude-manager
+    component: management-interface
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: claude-manager
+  template:
+    metadata:
+      labels:
+        app: claude-manager
+        component: management-interface
+    spec:
+      serviceAccountName: claude-manager
+      containers:
+      - name: claude-manager
+        image: claude-manager:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: PROJECTS_DOMAIN
+          value: "projects.internal"
+        - name: FRONTEND_URL
+          value: "*"
+        # JIRA configuration
+        - name: JIRA_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: claude-manager-config
+              key: jira-base-url
+              optional: true
+        - name: JIRA_EMAIL
+          valueFrom:
+            configMapKeyRef:
+              name: claude-manager-config
+              key: jira-email
+              optional: true
+        - name: JIRA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-manager-secrets
+              key: jira-api-key
+              optional: true
+        # Default values for auto-creation
+        - name: AUTO_CREATE_PROJECTS
+          value: "false"
+        - name: DEFAULT_ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-manager-secrets
+              key: default-anthropic-api-key
+              optional: true
+        - name: DEFAULT_GIT_ORG
+          valueFrom:
+            configMapKeyRef:
+              name: claude-manager-config
+              key: default-git-org
+              optional: true
+        # Backup configuration
+        - name: BACKUP_GIT_REPOSITORY
+          value: ""  # Set this to your backup repository URL
+        - name: BACKUP_GIT_BRANCH
+          valueFrom:
+            configMapKeyRef:
+              name: claude-manager-config
+              key: backup-git-branch
+              optional: true
+        - name: BACKUP_INTERVAL_HOURS
+          valueFrom:
+            configMapKeyRef:
+              name: claude-manager-config
+              key: backup-interval-hours
+              optional: true
+        - name: BACKUP_GIT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: claude-manager-secrets
+              key: backup-git-token
+              optional: true
+        - name: BACKUP_SSH_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-manager-secrets
+              key: backup-ssh-private-key
+              optional: true
+        - name: BACKUP_SSH_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-manager-secrets
+              key: backup-ssh-public-key
+              optional: true
+        # Kubernetes integration
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: claude-manager-config
+              key: kubernetes-namespace
+              optional: true
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        - name: logs
+          mountPath: /var/log/claude-manager
+        - name: backup
+          mountPath: /app/backup
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: claude-manager-data
+      - name: logs
+        emptyDir: {}
+      - name: backup
+        persistentVolumeClaim:
+          claimName: claude-manager-backup
+      securityContext:
+        fsGroup: 1001

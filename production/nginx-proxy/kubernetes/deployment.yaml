@@ -1,0 +1,194 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-proxy
+  labels:
+    app: nginx-proxy
+    component: reverse-proxy
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: nginx-proxy
+  template:
+    metadata:
+      labels:
+        app: nginx-proxy
+        component: reverse-proxy
+    spec:
+      containers:
+      - name: nginx-proxy
+        image: claude-nginx-proxy:latest
+        ports:
+        - containerPort: 80
+          name: http
+        - containerPort: 443
+          name: https
+        env:
+        - name: NGINX_WORKER_PROCESSES
+          value: "auto"
+        - name: NGINX_WORKER_CONNECTIONS
+          value: "1024"
+        - name: CLAUDE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        # SSO Configuration
+        - name: SSO_ENABLED
+          value: "false"  # Set to "true" to enable SSO
+        - name: SSO_PROVIDER
+          value: "insecure"  # Options: insecure, google, github, azure, okta, ldap
+        - name: SSO_BASE_URL
+          value: "http://projects.internal"
+        - name: SSO_COOKIE_DOMAIN
+          value: ".internal"
+        - name: SSO_COOKIE_SECURE
+          value: "false"
+        - name: SSO_COOKIE_EXPIRE
+          value: "86400"
+        # Provider-specific environment variables (configure based on chosen provider)
+        # Google OAuth
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: google-client-id
+              optional: true
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: google-client-secret
+              optional: true
+        - name: GOOGLE_ALLOWED_DOMAIN
+          value: "your-company.com"
+        # GitHub OAuth
+        - name: GITHUB_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: github-client-id
+              optional: true
+        - name: GITHUB_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: github-client-secret
+              optional: true
+        - name: GITHUB_ALLOWED_ORGS
+          value: "your-org"
+        # Azure AD
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: azure-client-id
+              optional: true
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: azure-client-secret
+              optional: true
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: azure-tenant-id
+              optional: true
+        - name: AZURE_ALLOWED_DOMAIN
+          value: "your-company.com"
+        # Okta OIDC
+        - name: OKTA_ISSUER
+          value: "https://your-domain.okta.com/oauth2/default"
+        - name: OKTA_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: okta-client-id
+              optional: true
+        - name: OKTA_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: okta-client-secret
+              optional: true
+        - name: OKTA_ALLOWED_DOMAIN
+          value: "your-company.com"
+        - name: OKTA_ALLOWED_GROUPS
+          value: "everyone"
+        # LDAP/Active Directory
+        - name: LDAP_HOST
+          value: "ldap.your-company.com"
+        - name: LDAP_PORT
+          value: "389"
+        - name: LDAP_USE_TLS
+          value: "false"
+        - name: LDAP_BASE_DN
+          value: "dc=your-company,dc=com"
+        - name: LDAP_UID_ATTRIBUTE
+          value: "uid"
+        - name: LDAP_SEARCH_FILTER
+          value: "(uid=%s)"
+        - name: LDAP_BIND_DN
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: ldap-bind-dn
+              optional: true
+        - name: LDAP_BIND_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nginx-sso-secrets
+              key: ldap-bind-password
+              optional: true
+        volumeMounts:
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+        - name: nginx-run
+          mountPath: /var/run
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 101  # nginx user
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+      volumes:
+      - name: nginx-cache
+        emptyDir: {}
+      - name: nginx-run
+        emptyDir: {}
+      securityContext:
+        fsGroup: 101

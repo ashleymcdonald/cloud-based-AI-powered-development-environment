@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: claude-manager
+  namespace: claude-manager
+  labels:
+    app: claude-manager
+    component: management-interface
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: claude-manager
+  labels:
+    app: claude-manager
+    component: management-interface
+rules:
+# Core resources for project management
+- apiGroups: [""]
+  resources: ["namespaces", "pods", "services", "configmaps", "secrets", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# Deployments and related resources
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# Pod logs access
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get", "list"]
+
+# Pod execution (for debugging)
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+
+# Events (for monitoring)
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch"]
+
+# Metrics (if using metrics-server)
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list"]
+
+# Network policies (optional)
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# Storage classes (for PVC creation)
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: claude-manager
+  labels:
+    app: claude-manager
+    component: management-interface
+subjects:
+- kind: ServiceAccount
+  name: claude-manager
+  namespace: claude-manager
+roleRef:
+  kind: ClusterRole
+  name: claude-manager
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Additional role for namespace-specific operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: claude-manager
+  name: claude-manager-local
+  labels:
+    app: claude-manager
+    component: management-interface
+rules:
+# Full access within the claude-manager namespace
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: claude-manager-local
+  namespace: claude-manager
+  labels:
+    app: claude-manager
+    component: management-interface
+subjects:
+- kind: ServiceAccount
+  name: claude-manager
+  namespace: claude-manager
+roleRef:
+  kind: Role
+  name: claude-manager-local
+  apiGroup: rbac.authorization.k8s.io

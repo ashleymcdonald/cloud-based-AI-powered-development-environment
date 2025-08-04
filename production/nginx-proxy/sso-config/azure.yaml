@@ -1,0 +1,129 @@
+# Microsoft Azure AD / Office 365 SSO Configuration
+
+listen:
+  addr: "0.0.0.0"
+  port: 8082
+
+login:
+  title: "Claude Code - Microsoft Authentication"
+  default_method: "azure"
+  hide_mfa_field: true
+  names:
+    azure: "Sign in with Microsoft"
+
+providers:
+  azure:
+    client_id: "${AZURE_CLIENT_ID}"
+    client_secret: "${AZURE_CLIENT_SECRET}"
+    redirect_url: "${SSO_BASE_URL}/auth"
+    tenant: "${AZURE_TENANT_ID}"
+    # Optional: Restrict to specific groups
+    # groups: ["developers", "admins"]
+
+cookie:
+  domain: "${SSO_COOKIE_DOMAIN:-}"
+  secure: ${SSO_COOKIE_SECURE:-true}
+  expire: ${SSO_COOKIE_EXPIRE:-86400}
+  prefix: "claude-auth"
+
+audit_log:
+  targets:
+    - fd://stdout
+  events: ["access_denied", "login_success", "login_failure", "logout", "validate"]
+  headers: ["x-origin-uri", "x-real-ip", "x-forwarded-for"]
+
+acl:
+  rule_sets:
+    - rules:
+        # Allow users from specific Azure AD tenant
+        - field: "mail"
+          regexp: "^[^@]+@${AZURE_ALLOWED_DOMAIN:-.*}$"
+        # Optional: Allow specific Azure AD groups
+        - field: "groups"
+          regexp: "${AZURE_ALLOWED_GROUPS:-.*}"
+      allow: ["azure"]
+
+templates:
+  login: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Claude Code - Microsoft Authentication</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+                color: white;
+            }
+            .login-container {
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                width: 100%;
+                max-width: 400px;
+                text-align: center;
+            }
+            .logo {
+                font-size: 3em;
+                margin-bottom: 20px;
+            }
+            .title {
+                font-size: 1.5em;
+                margin-bottom: 30px;
+                font-weight: 300;
+            }
+            .microsoft-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                padding: 12px 20px;
+                background: #0078d4;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 500;
+                text-decoration: none;
+                transition: background 0.3s ease;
+            }
+            .microsoft-btn:hover {
+                background: #106ebe;
+            }
+            .microsoft-icon {
+                width: 20px;
+                height: 20px;
+                margin-right: 12px;
+            }
+            .security-notice {
+                margin-top: 30px;
+                font-size: 12px;
+                opacity: 0.8;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="logo">🤖</div>
+            <div class="title">Claude Code</div>
+            <p>Access your AI-powered development environment</p>
+            <a href="/auth/azure" class="microsoft-btn">
+                <svg class="microsoft-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z"/>
+                </svg>
+                Continue with Microsoft
+            </a>
+            <div class="security-notice">
+                🔒 Secure authentication powered by Microsoft Azure AD
+            </div>
+        </div>
+    </body>
+    </html>
