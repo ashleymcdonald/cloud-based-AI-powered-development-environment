@@ -15,7 +15,7 @@ GIT_PROVIDER=""
 AUTH_METHOD=""
 NAMESPACE=""
 ANTHROPIC_API_KEY=""
-CODE_SERVER_PASSWORD=""
+# CODE_SERVER_PASSWORD not needed - nginx-sso handles authentication
 SUDO_PASSWORD=""
 JIRA_BASE_URL=""
 JIRA_EMAIL=""
@@ -37,7 +37,7 @@ OPTIONS:
     -p, --provider PROVIDER         Git provider: github, gitlab, bitbucket (required)
     -a, --auth AUTH_METHOD          Authentication method: token, ssh-key, none (required)
     -k, --anthropic-key KEY         Anthropic API key (required)
-    --code-password PASSWORD        Code server password (required)
+    # Code server password not needed - SSO handles authentication
     --sudo-password PASSWORD        Sudo password (required)
     --jira-url URL                  JIRA base URL (optional)
     --jira-email EMAIL              JIRA email (optional)
@@ -52,17 +52,17 @@ OPTIONS:
 EXAMPLES:
     # GitHub with token authentication
     $0 -n myproject -r https://github.com/myorg/myproject.git -p github -a token \\
-       -k sk-ant-xxx --code-password mypass --sudo-password mypass \\
+       -k sk-ant-xxx --sudo-password mypass \\
        --git-token ghp_xxx --deploy
 
     # GitLab with SSH key authentication  
     $0 -n myproject -r git@gitlab.com:myorg/myproject.git -p gitlab -a ssh-key \\
-       -k sk-ant-xxx --code-password mypass --sudo-password mypass \\
+       -k sk-ant-xxx --sudo-password mypass \\
        --ssh-private-key ~/.ssh/id_rsa --ssh-public-key ~/.ssh/id_rsa.pub --deploy
 
     # Public repository (no authentication)
     $0 -n openai-python -r https://github.com/openai/openai-python.git -p github -a none \\
-       -k sk-ant-xxx --code-password mypass --sudo-password mypass --deploy
+       -k sk-ant-xxx --sudo-password mypass --deploy
 
 EOF
 }
@@ -91,7 +91,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --code-password)
-            CODE_SERVER_PASSWORD="$2"
+            echo "⚠️  Code server password not needed - nginx-sso handles authentication"
             shift 2
             ;;
         --sudo-password)
@@ -173,11 +173,7 @@ if [[ -z "$ANTHROPIC_API_KEY" ]]; then
     exit 1
 fi
 
-if [[ -z "$CODE_SERVER_PASSWORD" ]]; then
-    echo "❌ Error: Code server password is required"
-    usage
-    exit 1
-fi
+# Code server password not needed - nginx-sso handles authentication
 
 if [[ -z "$SUDO_PASSWORD" ]]; then
     echo "❌ Error: Sudo password is required"
@@ -287,7 +283,7 @@ secretGenerator:
     behavior: replace
     literals:
       - anthropic-api-key=$ANTHROPIC_API_KEY
-      - code-server-password=$CODE_SERVER_PASSWORD
+      # code-server-password not needed - nginx-sso handles authentication
       - sudo-password=$SUDO_PASSWORD$([ -n "$GIT_TOKEN" ] && echo "
       - git-token=$GIT_TOKEN")$([ -n "$JIRA_API_KEY" ] && echo "
       - jira-api-key=$JIRA_API_KEY")$([ "$AUTH_METHOD" == "ssh-key" ] && echo "

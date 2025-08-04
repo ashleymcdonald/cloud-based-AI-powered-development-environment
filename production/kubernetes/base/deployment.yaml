@@ -33,11 +33,6 @@ spec:
           value: "UTC"
         - name: DEFAULT_WORKSPACE
           value: "/workspace"
-        - name: PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: claude-dev-secrets
-              key: code-server-password
         - name: SUDO_PASSWORD
           valueFrom:
             secretKeyRef:

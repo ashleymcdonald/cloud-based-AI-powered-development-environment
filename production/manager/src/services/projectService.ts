@@ -66,7 +66,7 @@ export class ProjectService {
         projectKeys: request.jiraProjectKeys || []
       } : undefined,
       anthropicApiKey: request.anthropicApiKey,
-      codeServerPassword: request.codeServerPassword,
+      codeServerPassword: request.codeServerPassword, // Optional - only used for local dev
       sudoPassword: request.sudoPassword,
       resources: request.resources,
       status: 'creating',

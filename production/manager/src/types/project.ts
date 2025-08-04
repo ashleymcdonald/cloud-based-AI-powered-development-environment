@@ -37,7 +37,7 @@ export interface ProjectConfig {
   
   // Claude Code configuration
   anthropicApiKey: string;
-  codeServerPassword: string;
+  codeServerPassword?: string; // Optional - only needed for local dev, SSO handles auth in production
   sudoPassword: string;
   
   // Resource limits
@@ -110,7 +110,7 @@ export interface ProjectCreateRequest {
   gitCredentialId?: string;
   jiraProjectKeys?: string[];
   anthropicApiKey: string;
-  codeServerPassword: string;
+  codeServerPassword?: string; // Optional - only for local dev
   sudoPassword: string;
   jiraConfig?: Partial<JiraConfig>;
   resources?: ProjectConfig['resources'];

@@ -74,7 +74,6 @@ export class KubernetesService {
         GIT_REPOSITORY: project.gitRepository,
         GIT_AUTH_TYPE: project.gitAuth?.type || 'none',
         ANTHROPIC_API_KEY: project.anthropicApiKey,
-        CODE_SERVER_PASSWORD: project.codeServerPassword,
         SUDO_PASSWORD: project.sudoPassword,
         PROJECT_NAME: project.name,
         PROJECT_SHORT_NAME: project.shortName,
@@ -191,15 +190,6 @@ export class KubernetesService {
                   { containerPort: 3000, name: 'dev-server' }
                 ],
                 env: [
-                  {
-                    name: 'PASSWORD',
-                    valueFrom: {
-                      configMapKeyRef: {
-                        name: `project-${project.shortName}`,
-                        key: 'CODE_SERVER_PASSWORD'
-                      }
-                    }
-                  },
                   {
                     name: 'SUDO_PASSWORD',
                     valueFrom: {
@@ -351,7 +341,6 @@ export class KubernetesService {
       configMap.data = {
         ...configMap.data,
         ANTHROPIC_API_KEY: project.anthropicApiKey,
-        CODE_SERVER_PASSWORD: project.codeServerPassword,
         SUDO_PASSWORD: project.sudoPassword,
         PROJECT_NAME: project.name,
         ...(project.jiraConfig && {

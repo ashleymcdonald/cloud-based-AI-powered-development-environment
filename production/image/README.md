@@ -41,8 +41,8 @@ docker push your-registry/claude-dev-env:v1.0.0
 #### Required
 ```bash
 ANTHROPIC_API_KEY=sk-ant-your-api-key        # Claude Code API key
-CODE_SERVER_PASSWORD=secure-password         # VS Code access password
 SUDO_PASSWORD=sudo-password                  # Container sudo password
+# Note: VS Code authentication is handled by nginx-sso proxy in production
 ```
 
 #### Git Configuration

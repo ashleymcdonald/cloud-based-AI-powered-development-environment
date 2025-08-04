@@ -62,6 +62,12 @@ kubectl port-forward svc/claude-manager-service 3000:3000 -n claude-manager
 
 ## 📊 Features
 
+### 🔐 Enterprise Authentication
+- **SSO Integration**: Support for Google, GitHub, Azure AD, Okta, LDAP/Active Directory
+- **Insecure Dev Mode**: Password-free development authentication
+- **User Context**: Authenticated user information passed to all services
+- **No Service Passwords**: VS Code and all services use centralized SSO authentication
+
 ### 🎛️ Centralized Management
 - **Web Dashboard**: Create, manage, and monitor all projects
 - **REST API**: Programmatic project management

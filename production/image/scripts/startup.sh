@@ -29,20 +29,19 @@ fi
 log "📝 Starting code-server with production configuration..."
 
 # Export required environment variables for code-server
-export PASSWORD="${CODE_SERVER_PASSWORD:-password}"
 export SUDO_PASSWORD="${SUDO_PASSWORD:-password}"
 
-# Start code-server as coder user
+# Start code-server as coder user (NO AUTH - handled by nginx SSO)
+log "📝 Starting code-server with SSO authentication (no local auth)..."
 sudo -u coder -E bash -c '
     cd /workspace
     code-server \
         --bind-addr 0.0.0.0:8443 \
-        --auth password \
-        --password "$PASSWORD" \
+        --auth none \
         --disable-telemetry \
         --disable-update-check \
         --locale en \
-        --log debug \
+        --log info \
         /workspace > /var/log/code-server.log 2>&1 &
 '
 
